@@ -1,0 +1,93 @@
+<!doctype html><html lang="id"><head><base target="_top"><meta charset="utf-8"><style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f3faf5;color:#173324}
+header{background:linear-gradient(135deg,#0e4429,#2e9e62);color:#fff;padding:22px 16px;text-align:center}h1{margin:0}header p{margin:4px 0 0;opacity:.85}
+main{max-width:760px;margin:auto;padding:16px}.box{background:#fff;border:1px solid #cfe6d6;border-radius:14px;padding:16px;margin-bottom:14px}
+input,select,textarea,button{font:inherit;padding:10px 12px;border:1px solid #cfe6d6;border-radius:9px;background:#fff;color:inherit}
+input:not([type=checkbox]),select,textarea{width:100%}button{cursor:pointer}.utama{background:#1b6b43;color:#fff;border:0;width:100%;padding:13px;font-weight:700}
+button:disabled{opacity:.6}.tab{display:flex;gap:8px;margin-bottom:12px}.tab button{flex:1}.tab .on{background:#1b6b43;color:#fff}
+.dua{display:grid;grid-template-columns:1fr 1fr;gap:10px}label.t{display:flex;gap:12px;align-items:center;padding:11px 4px;border-bottom:1px solid #e8f5ec;cursor:pointer}
+label.t input{width:22px;height:22px;accent-color:#1b6b43;flex:none}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.cards .box{margin:0;text-align:center;border-top:5px solid #1b6b43}.cards b{display:block;font-size:30px;color:#0e4429}small{color:#5b7a67}
+.bar{height:9px;background:#e8f5ec;border-radius:9px;margin:5px 0 12px}.bar i{display:block;height:100%;background:#2e9e62;border-radius:9px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{background:#1b6b43;color:#fff}th,td{padding:8px;text-align:left;border-bottom:1px solid #e8f5ec}
+#msg{position:sticky;bottom:10px;text-align:center;padding:11px;border-radius:9px;background:#d9f2e0}#msg:empty{display:none}[hidden]{display:none!important}
+main.lebar{max-width:1040px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi div{border-radius:16px;padding:16px;color:#fff;background:linear-gradient(135deg,#0e4429,#1b6b43)}.kpi div:nth-child(2){background:linear-gradient(135deg,#1b6b43,#2e9e62)}
+.kpi div:nth-child(3){background:linear-gradient(135deg,#2e9e62,#57bd83)}.kpi div:nth-child(4){background:#fff;color:#b23b32;border:1px solid #f0cfcb}.kpi b{display:block;font-size:34px}
+.juara{background:#d9f2e0;border:1px solid #8fd19e;border-radius:16px;padding:14px;text-align:center;font-weight:700;margin-bottom:14px}
+.tiga{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.tiga .box{margin:0;text-align:center}
+.cincin{width:110px;height:110px;border-radius:50%;margin:10px auto;display:grid;place-items:center;background:conic-gradient(#2e9e62 calc(var(--p)*1%),#e8f5ec 0)}
+.cincin span{width:84px;height:84px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:24px;font-weight:800;color:#0e4429}
+.grafik{display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:2px solid #cfe6d6}.grafik i{flex:1;background:#2e9e62;border-radius:5px 5px 0 0}
+.kal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:12px}.kal div{min-height:58px;border-radius:8px;padding:5px 1px;background:#f3faf5;overflow:hidden}
+.kal .h{min-height:0;background:#1b6b43;color:#fff;font-weight:700}.kal .baik{background:#bfe8cb}.kal .cukup{background:#ffe9a8}.kal .kurang{background:#f6c6c2}.kal .kosong{background:none}
+h3{margin:0 0 12px;color:#0e4429}.gulir{overflow-x:auto}
+@media(max-width:620px){.kpi{grid-template-columns:1fr 1fr}.tiga{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>☕ Sensey Coffee</h1><p>Checklist Pembukaan Harian</p></header>
+<main>
+<div class="box" id="login"><p>Masukkan PIN tim</p><input id="pin" type="password" inputmode="numeric"><p></p><button class="utama" id="masuk">Masuk</button></div>
+<div id="app" hidden>
+<div class="tab"><button id="a" class="on">Isi Checklist</button><button id="b">Dashboard</button></div>
+<section id="isi">
+<div class="box dua"><div>Tanggal<input type="date" id="tgl"></div><div>Barista<select id="nama"></select></div></div>
+<div class="box"><b id="hitung"></b><div id="list"></div><p>Catatan</p><textarea id="cat" rows="2" maxlength="500"></textarea>
+<p><small id="info"></small></p><button class="utama" id="kirim">Simpan ke spreadsheet</button></div>
+<div class="box"><small>Pra-opening nyalakan 1 AC saja, 2 AC kalau sudah ada customer. Lagu jangan sampai hening. Hasil akan di-crosscheck Supervisor/Manager.</small></div>
+</section>
+<section id="dash" hidden><div class="box">Bulan<input type="month" id="bln"></div><div id="hasil"></div></section>
+</div>
+<div id="msg"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let D,PIN="";
+const el=(t,x,c)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;return e};
+const tglID=s=>new Date(s+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const pesan=t=>$("msg").textContent=t||"";
+function panggil(fn,args,ok){pesan("Memproses…");document.querySelectorAll(".utama").forEach(b=>b.disabled=true);
+ const selesai=()=>document.querySelectorAll(".utama").forEach(b=>b.disabled=false);
+ google.script.run.withSuccessHandler(r=>{selesai();pesan();ok(r)}).withFailureHandler(e=>{selesai();pesan(e.message)})[fn](...args)}
+$("masuk").onclick=()=>{PIN=$("pin").value;panggil("ambilData",[PIN],r=>{D=r;$("login").hidden=true;$("app").hidden=false;
+ $("nama").replaceChildren(new Option("- pilih -",""),...D.barista.map(n=>new Option(n)));
+ $("list").replaceChildren(...D.tugas.map((t,i)=>{const l=el("label",null,"t"),c=el("input");c.type="checkbox";c.onchange=hitung;l.append(c,el("span",(i+1)+". "+t));return l}));
+ $("tgl").value=D.hariIni;$("bln").value=D.hariIni.slice(0,7);muat();dash()})};
+const kotak=()=>[...$("list").querySelectorAll("input")];
+function hitung(){const n=kotak().filter(c=>c.checked).length;$("hitung").textContent=n+" dari "+D.tugas.length+" tugas selesai"}
+function muat(){const d=D.data.find(x=>x.tgl===$("tgl").value);
+ $("nama").value=d?d.barista:"";kotak().forEach((c,i)=>c.checked=!!d&&d.cek[i]==="✓");$("cat").value=d?d.catatan:"";
+ $("info").textContent=!d?"Tanggal ini belum tersedia di spreadsheet.":d.barista?tglID(d.tgl)+" sudah diisi "+d.barista+". Menyimpan akan menimpa isian itu.":tglID(d.tgl)+" belum diisi.";hitung()}
+$("tgl").onchange=muat;
+$("kirim").onclick=()=>{if(!$("nama").value)return pesan("Pilih nama barista dulu.");
+ panggil("simpan",[PIN,{tgl:$("tgl").value,barista:$("nama").value,cek:kotak().map(c=>c.checked),catatan:$("cat").value}],r=>{D=r;muat();dash();pesan("Tersimpan ✓");setTimeout(pesan,2500)})};
+function dash(){const n=D.tugas.length,bln=$("bln").value,rows=D.data.filter(d=>d.barista&&d.tgl.startsWith(bln));
+ const ok=d=>d.cek.filter(v=>v==="✓").length,skor=l=>l.length?Math.round(l.reduce((s,d)=>s+ok(d),0)/(l.length*n)*100):null,pc=v=>v===null?"-":v+"%";
+ const kelas=v=>v>=90?"baik":v>=75?"cukup":"kurang",box=judul=>{const x=el("div",null,"box");x.append(el("h3",judul));return x};
+ const kpi=el("div",null,"kpi");
+ [["Hari terisi",rows.length],["Rata-rata skor",pc(skor(rows))],["Hari sempurna",rows.filter(d=>ok(d)===n).length],["Tugas terlewat",rows.reduce((s,d)=>s+n-ok(d),0)]].forEach(([a,v])=>{const c=el("div",a);c.append(el("b",v));kpi.append(c)});
+ const tim=D.barista.map(b=>{const l=rows.filter(d=>d.barista===b);return{b,l,p:skor(l)}});
+ const top=Math.max(-1,...tim.filter(t=>t.l.length).map(t=>t.p));
+ const juara=el("div",top<0?"🏆 Belum ada data bulan ini":"🏆 Barista terbaik: "+tim.filter(t=>t.p===top).map(t=>t.b).join(" & ")+" ("+top+"%)","juara");
+ const tiga=el("div",null,"tiga");
+ tim.forEach(t=>{const c=box(t.b),r=el("div",null,"cincin"),h=t.l.length;r.style.setProperty("--p",t.p||0);r.append(el("span",pc(t.p)));
+  c.append(r,el("b",!h?"Belum ada data":t.p>=90?"★ Sangat baik":t.p>=75?"Cukup":"Perlu perhatian"),el("br"),el("small",h+" hari tugas · "+t.l.filter(d=>ok(d)===n).length+" sempurna"));tiga.append(c)});
+ const [y,m]=bln.split("-").map(Number),hari=y?new Date(y,m,0).getDate():0;
+ const tren=box("Tren skor harian"),g=el("div",null,"grafik"),kal=box("Kalender skor"),k=el("div",null,"kal");
+ ["Sen","Sel","Rab","Kam","Jum","Sab","Min"].forEach(x=>k.append(el("div",x,"h")));
+ for(let i=0;i<(y?(new Date(y,m-1,1).getDay()+6)%7:0);i++)k.append(el("div",null,"kosong"));
+ for(let i=1;i<=hari;i++){const d=rows.find(r=>r.tgl===bln+"-"+String(i).padStart(2,"0")),p=d?skor([d]):null;
+  const batang=el("i");batang.style.height=(p||0)+"%";batang.title=i+": "+pc(p);g.append(batang);
+  const c=el("div",null,d?kelas(p):"");c.append(el("b",i));if(d)c.append(el("div",d.barista),el("span",p+"%"));
+  c.lastChild.style&&d&&(c.children[1].style.cssText="min-height:0;padding:0;background:none");k.append(c)}
+ const ket=el("small","Warna kalender: hijau 90% ke atas, kuning 75-89%, merah di bawah 75%.");
+ tren.append(g,el("small","Tiap batang satu hari, dari tanggal 1 sampai "+hari+"."));kal.append(k,ket);
+ const tugas=box("Kepatuhan per tugas (terendah di atas)");
+ D.tugas.map((t,i)=>({t,p:rows.length?Math.round(rows.filter(d=>d.cek[i]==="✓").length/rows.length*100):null})).sort((a,b)=>a.p-b.p).forEach(({t,p})=>{const bar=el("div",null,"bar"),f=el("i");f.style.width=(p||0)+"%";bar.append(f);tugas.append(el("div",t+" · "+pc(p)),bar)});
+ const r=box("Rekap harian"),w=el("div",null,"gulir"),tb=el("table");w.append(tb);r.append(w);
+ const tr=(v,t)=>{const x=el("tr");v.forEach(s=>x.append(el(t,s)));tb.append(x)};
+ tr(["Tanggal","Barista","Skor","Catatan","Crosscheck"],"th");rows.forEach(d=>tr([tglID(d.tgl),d.barista,pc(skor([d])),d.catatan||"-",d.spv||"-"],"td"));
+ $("hasil").replaceChildren(kpi,juara,tiga,tren,kal,tugas,r)}
+$("bln").onchange=dash;
+function tab(x){document.querySelector("main").classList.toggle("lebar",x);$("isi").hidden=x;$("dash").hidden=!x;$("a").classList.toggle("on",!x);$("b").classList.toggle("on",x)}
+$("a").onclick=()=>tab(false);$("b").onclick=()=>tab(true);
+</script></body></html>
