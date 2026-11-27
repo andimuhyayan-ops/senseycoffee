@@ -1,4 +1,4 @@
-<!doctype html><html lang="id"><head><base target="_top"><meta charset="utf-8"><style>
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sensey Coffee</title><style>
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f3faf5;color:#173324}
 header{background:linear-gradient(135deg,#0e4429,#2e9e62);color:#fff;padding:22px 16px;text-align:center}h1{margin:0}header p{margin:4px 0 0;opacity:.85}
 main{max-width:760px;margin:auto;padding:16px}.box{background:#fff;border:1px solid #cfe6d6;border-radius:14px;padding:16px;margin-bottom:14px}
@@ -27,7 +27,7 @@ h3{margin:0 0 12px;color:#0e4429}.gulir{overflow-x:auto}
 </style></head><body>
 <header><h1>☕ Sensey Coffee</h1><p>Checklist Pembukaan Harian</p></header>
 <main>
-<div class="box" id="login"><p>Masukkan PIN tim</p><input id="pin" type="password" inputmode="numeric"><p></p><button class="utama" id="masuk">Masuk</button></div>
+<div class="box" id="login"><p>Masukkan kata sandi</p><input id="pin" type="password" onkeydown="if(event.key==='Enter')masuk.click()"><p></p><button class="utama" id="masuk">Masuk</button></div>
 <div id="app" hidden>
 <div class="tab"><button id="a" class="on">Isi Checklist</button><button id="b">Dashboard</button></div>
 <section id="isi">
@@ -45,10 +45,18 @@ const $=id=>document.getElementById(id);let D,PIN="";
 const el=(t,x,c)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;return e};
 const tglID=s=>new Date(s+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const pesan=t=>$("msg").textContent=t||"";
-function panggil(fn,args,ok){pesan("Memproses…");document.querySelectorAll(".utama").forEach(b=>b.disabled=true);
- const selesai=()=>document.querySelectorAll(".utama").forEach(b=>b.disabled=false);
- google.script.run.withSuccessHandler(r=>{selesai();pesan();ok(r)}).withFailureHandler(e=>{selesai();pesan(e.message)})[fn](...args)}
-$("masuk").onclick=()=>{PIN=$("pin").value;panggil("ambilData",[PIN],r=>{D=r;$("login").hidden=true;$("app").hidden=false;
+// Alamat Web App Apps Script
+const API="https://script.google.com/macros/s/AKfycbwSWmTKWsLp7OhwAZTmB-_0luwXkuEU1kBuk62jsy8RvXuPEFEvesHpeiRTaY7ujNvm/exec";
+async function panggil(isiPermintaan,ok){pesan("Memproses…");const tombol=document.querySelectorAll(".utama");tombol.forEach(b=>b.disabled=true);
+ const batal=new AbortController(),waktu=setTimeout(()=>batal.abort(),45000);
+ try{
+  // tanpa header Content-Type supaya tidak kena blokir CORS
+  const res=await fetch(API,{method:"POST",body:JSON.stringify({token:PIN,...isiPermintaan}),signal:batal.signal});
+  const r=await res.json();if(r.error)throw new Error(r.message||r.error);pesan();ok(r);
+ }catch(e){
+  pesan(e.name==="AbortError"?"Server tidak menjawab. Coba lagi.":e instanceof TypeError||e instanceof SyntaxError?"Tidak bisa terhubung. Cek internet dan akses deployment harus \"Siapa saja\".":e.message);
+ }finally{clearTimeout(waktu);tombol.forEach(b=>b.disabled=false)}}
+$("masuk").onclick=()=>{PIN=$("pin").value;panggil({action:"get"},r=>{D=r;$("login").hidden=true;$("app").hidden=false;
  $("nama").replaceChildren(new Option("- pilih -",""),...D.barista.map(n=>new Option(n)));
  $("list").replaceChildren(...D.tugas.map((t,i)=>{const l=el("label",null,"t"),c=el("input");c.type="checkbox";c.onchange=hitung;l.append(c,el("span",(i+1)+". "+t));return l}));
  $("tgl").value=D.hariIni;$("bln").value=D.hariIni.slice(0,7);muat();dash()})};
@@ -59,7 +67,7 @@ function muat(){const d=D.data.find(x=>x.tgl===$("tgl").value);
  $("info").textContent=!d?"Tanggal ini belum tersedia di spreadsheet.":d.barista?tglID(d.tgl)+" sudah diisi "+d.barista+". Menyimpan akan menimpa isian itu.":tglID(d.tgl)+" belum diisi.";hitung()}
 $("tgl").onchange=muat;
 $("kirim").onclick=()=>{if(!$("nama").value)return pesan("Pilih nama barista dulu.");
- panggil("simpan",[PIN,{tgl:$("tgl").value,barista:$("nama").value,cek:kotak().map(c=>c.checked),catatan:$("cat").value}],r=>{D=r;muat();dash();pesan("Tersimpan ✓");setTimeout(pesan,2500)})};
+ panggil({action:"update",isi:{tgl:$("tgl").value,barista:$("nama").value,cek:kotak().map(c=>c.checked),catatan:$("cat").value}},r=>{D=r;muat();dash();pesan("Tersimpan ✓");setTimeout(pesan,2500)})};
 function dash(){const n=D.tugas.length,bln=$("bln").value,rows=D.data.filter(d=>d.barista&&d.tgl.startsWith(bln));
  const ok=d=>d.cek.filter(v=>v==="✓").length,skor=l=>l.length?Math.round(l.reduce((s,d)=>s+ok(d),0)/(l.length*n)*100):null,pc=v=>v===null?"-":v+"%";
  const kelas=v=>v>=90?"baik":v>=75?"cukup":"kurang",box=judul=>{const x=el("div",null,"box");x.append(el("h3",judul));return x};
