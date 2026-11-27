@@ -27,7 +27,7 @@ h3{margin:0 0 12px;color:#0e4429}.gulir{overflow-x:auto}
 </style></head><body>
 <header><h1>☕ Sensey Coffee</h1><p>Checklist Pembukaan Harian</p></header>
 <main>
-<div class="box" id="login"><p>Masukkan kata sandi</p><input id="pin" type="password" onkeydown="if(event.key==='Enter')masuk.click()"><p></p><button class="utama" id="masuk">Masuk</button></div>
+<button class="utama" id="masuk" hidden>Coba lagi</button><p></p>
 <div id="app" hidden>
 <div class="tab"><button id="a" class="on">Isi Checklist</button><button id="b">Dashboard</button></div>
 <section id="isi">
@@ -41,7 +41,7 @@ h3{margin:0 0 12px;color:#0e4429}.gulir{overflow-x:auto}
 <div id="msg"></div>
 </main>
 <script>
-const $=id=>document.getElementById(id);let D,PIN="";
+const $=id=>document.getElementById(id);let D;
 const el=(t,x,c)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;return e};
 const tglID=s=>new Date(s+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const pesan=t=>$("msg").textContent=t||"";
@@ -51,15 +51,17 @@ async function panggil(isiPermintaan,ok){pesan("Memproses…");const tombol=docu
  const batal=new AbortController(),waktu=setTimeout(()=>batal.abort(),45000);
  try{
   // tanpa header Content-Type supaya tidak kena blokir CORS
-  const res=await fetch(API,{method:"POST",body:JSON.stringify({token:PIN,...isiPermintaan}),signal:batal.signal});
+  const res=await fetch(API,{method:"POST",body:JSON.stringify({...isiPermintaan}),signal:batal.signal});
   const r=await res.json();if(r.error)throw new Error(r.message||r.error);pesan();ok(r);
  }catch(e){
   pesan(e.name==="AbortError"?"Server tidak menjawab. Coba lagi.":e instanceof TypeError||e instanceof SyntaxError?"Tidak bisa terhubung. Cek internet dan akses deployment harus \"Siapa saja\".":e.message);
+   if(!D)$("masuk").hidden=false;
  }finally{clearTimeout(waktu);tombol.forEach(b=>b.disabled=false)}}
-$("masuk").onclick=()=>{PIN=$("pin").value;panggil({action:"get"},r=>{D=r;$("login").hidden=true;$("app").hidden=false;
+function mulai(){$("masuk").hidden=true;panggil({action:"get"},r=>{D=r;$("masuk").hidden=true;$("app").hidden=false;
  $("nama").replaceChildren(new Option("- pilih -",""),...D.barista.map(n=>new Option(n)));
  $("list").replaceChildren(...D.tugas.map((t,i)=>{const l=el("label",null,"t"),c=el("input");c.type="checkbox";c.onchange=hitung;l.append(c,el("span",(i+1)+". "+t));return l}));
- $("tgl").value=D.hariIni;$("bln").value=D.hariIni.slice(0,7);muat();dash()})};
+ $("tgl").value=D.hariIni;$("bln").value=D.hariIni.slice(0,7);muat();dash()})}
+$("masuk").onclick=mulai;
 const kotak=()=>[...$("list").querySelectorAll("input")];
 function hitung(){const n=kotak().filter(c=>c.checked).length;$("hitung").textContent=n+" dari "+D.tugas.length+" tugas selesai"}
 function muat(){const d=D.data.find(x=>x.tgl===$("tgl").value);
@@ -98,4 +100,5 @@ function dash(){const n=D.tugas.length,bln=$("bln").value,rows=D.data.filter(d=>
 $("bln").onchange=dash;
 function tab(x){document.querySelector("main").classList.toggle("lebar",x);$("isi").hidden=x;$("dash").hidden=!x;$("a").classList.toggle("on",!x);$("b").classList.toggle("on",x)}
 $("a").onclick=()=>tab(false);$("b").onclick=()=>tab(true);
+mulai();
 </script></body></html>
