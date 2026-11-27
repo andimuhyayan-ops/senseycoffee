@@ -46,7 +46,7 @@ const el=(t,x,c)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;
 const tglID=s=>new Date(s+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const pesan=t=>$("msg").textContent=t||"";
 // Alamat Web App Apps Script
-const API="https://script.google.com/macros/s/AKfycbwSWmTKWsLp7OhwAZTmB-_0luwXkuEU1kBuk62jsy8RvXuPEFEvesHpeiRTaY7ujNvm/exec";
+const API="https://script.google.com/macros/s/AKfycbyB2r3AQLFw-TmjzeUr5zwwkvhPsheoFsjQhaL0dloqnedvSuY-RZ853JtzKWWVWVZR/exec";
 async function panggil(isiPermintaan,ok){pesan("Memproses…");const tombol=document.querySelectorAll(".utama");tombol.forEach(b=>b.disabled=true);
  const batal=new AbortController(),waktu=setTimeout(()=>batal.abort(),45000);
  try{
